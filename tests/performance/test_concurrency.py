@@ -2,7 +2,7 @@ import platform
 import re
 import subprocess
 import time
-from multiprocessing import Process
+import sys
 
 import pytest
 
@@ -12,12 +12,20 @@ from .server import run_server
 # TODO: Fix and readd "memcached" (currently fails >98% of requests)
 @pytest.fixture(params=("memory", "valkey"))
 def server(request):
-    p = Process(target=run_server, args=(request.param,))
-    p.start()
-    time.sleep(1)
+    cmd = [
+        sys.executable, "-c", 
+        f"from tests.performance.server import run_server; run_server('{request.param}')"
+    ]
+    p = subprocess.Popen(cmd)
+    time.sleep(2)
     yield
     p.terminate()
-    p.join(timeout=15)
+    try:
+        p.wait(timeout=5)
+    except subprocess.TimeoutExpired:
+        p.kill()
+        p.wait()
+
 
 
 @pytest.mark.skipif(platform.python_implementation() == "PyPy", reason="Not working currently.")
