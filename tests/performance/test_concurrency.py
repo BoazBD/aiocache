@@ -1,19 +1,17 @@
 import platform
 import re
 import subprocess
-import time
 import sys
+import time
 
 import pytest
-
-from .server import run_server
 
 
 # TODO: Fix and readd "memcached" (currently fails >98% of requests)
 @pytest.fixture(params=("memory", "valkey"))
 def server(request):
     cmd = [
-        sys.executable, "-c", 
+        sys.executable, "-c",
         f"from tests.performance.server import run_server; run_server('{request.param}')"
     ]
     p = subprocess.Popen(cmd)
@@ -25,7 +23,6 @@ def server(request):
     except subprocess.TimeoutExpired:
         p.kill()
         p.wait()
-
 
 
 @pytest.mark.skipif(platform.python_implementation() == "PyPy", reason="Not working currently.")
